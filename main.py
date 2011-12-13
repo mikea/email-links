@@ -1,14 +1,23 @@
 import logging
+import os
 
 from google.appengine.api import mail
 from google.appengine.ext import webapp
+from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 
-class MainPage(webapp.RequestHandler):
+
+class BaseHandler(webapp.RequestHandler):
+
+  def render_template(self, relative_template_path, variables):
+    full_path = os.path.join(os.path.dirname(__file__), relative_template_path)
+    self.response.out.write(template.render(full_path, variables))
+
+
+class MainHandler(BaseHandler):
   def get(self):
-    self.response.headers['Content-Type'] = 'text/plain'
-    self.response.out.write('Hello, webapp World!')
+    self.render_template('t/index.html', {})
 
 
 class IncomingEmailHandler(webapp.RequestHandler):
@@ -18,7 +27,7 @@ class IncomingEmailHandler(webapp.RequestHandler):
 
 
 application = webapp.WSGIApplication(
-    [('/', MainPage),
+    [('/', MainHandler),
      ('/_ah/mail/.+', IncomingEmailHandler)
      ],
     debug=True)
